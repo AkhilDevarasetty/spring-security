@@ -2,7 +2,6 @@ package com.springsecurity.demo.configuration;
 
 import javax.sql.DataSource;
 
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -10,10 +9,12 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.springsecurity.demo.filters.JwtRequestFilter;
 import com.springsecurity.demo.service.MyUserDetailsService;
 
 @EnableWebSecurity
@@ -21,6 +22,9 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
 
 	@Autowired
 	DataSource dataSource;
+	
+	@Autowired
+	JwtRequestFilter jwtRequestFilter;
 
 	@Autowired
 	MyUserDetailsService myUserDeatilsService;
@@ -64,7 +68,10 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
 			 * .antMatchers("/spring-security/hello").permitAll() .and().formLogin();
 			 */
 		  
-		  http.csrf().disable().authorizeRequests().antMatchers("/spring-security/authenticate").permitAll().anyRequest().authenticated();
+		  http.csrf().disable().authorizeRequests().antMatchers("/spring-security/authenticate").permitAll()
+		  .anyRequest().authenticated().and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+		  
+		  http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 	   
 	  }
 	 
